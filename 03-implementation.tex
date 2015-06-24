@@ -1,0 +1,59 @@
+\chapter{Implementation}
+\label{cha:imp}
+There was a number of considerations while designing and building this solution. These ranged from time limitations to minimising the amount of chances in the original Testu01 library and producing a less complex solution. 
+
+This chapter explains these limitations and the process of making choices in the design of the final implementation in order to best balance the solution between these limitations.
+
+\section{Design Choices}
+\subsection{Threads versus Processes}
+\label{sec:processes}
+The usual approach in parallelisation is to spawn threads, each of which handles a discrete part of the processing. This approach is favoured in larger projects, because it allows handling the complexity of multithreading internally, without the use of process wrappers.
+
+The biggest advantage of threads is that they share address space. Results can be passed to the thread handler via conventional means, such as arrays. Since each test already puts its results in a specific array cell, this approach would seem natural.
+
+Usually, thread programming is bug-prone because of the need for locking. Data corruption, deadlocks and loss of performance due to waiting for locked resources are common\cite{ers-artofunix}. Fixing these would increase overall time required to complete the project.
+
+A multi-threaded Testu01 would not suffer from these problems. The result data of each test is already placed completely independently in an array, so locking would not be required.
+
+However, there is a number of problems with using threads, the greatest of which is that the complexity of the changes in Testu01 would be quite high. 
+
+The creators of Testu01 have in some cases built in it functionality that eases the decoupling of the separate tests in threads. In some others, their code is too tightly integrated together that a multi-threaded approach would require major restructuring. 
+
+The generators are not shareable between threads. There is only one generator that the tests use in sequence. If it were to be used by threads, each thread would not get sequential increments along the generator state, effectively getting random sequences instead of deterministic ones and the test results would be skewed.
+
+Thus the biggest challenge would be to ensure that every thread uses a separate generator. An array of generators could be used, but this would require building a function that using a single generator instance creates an array of them. This would increase complexity and potentially introduce unforeseen consequences. Restructuring the test suites so that they use the generator array would be required. Finally, the way that the result printing aggregators are called and behave would have to change. All these involve restructuring that would both require large amount of time and might introduce unforeseen consequences that could cause erroneous results.
+
+The greatest advantage of multiple processes is that the generator separation is done automatically. A new generator for the test is created by the slave process in the exact same way that the generators are currently created.
+
+The test suites are already designed so that only a specific test can be run when they are called. Adding the functionality needed to select a single test is trivial. Thus using processes only requires small changes in Testu01. This makes porting any future Testu01 improvements to the parallel implementation comparatively easier.
+
+Furthermore, the process wrapper code can be written in a language other than C. Since it is not a time crucial part of the code, it can be written a higher level language such as Python, improving maintainability and extensibility.
+
+Of course, processes have disadvantages of their own. The biggest one is the fact that the generator is set up separately for each process. This is explored further in the limitations section.
+
+Extracting the test results from the processes will also have to be handled by the process master. Ideally they would be aggregated programmatically. Testu01 already provides this functionality and threads would be able to use it. Processes will not, so it will have to be duplicated by the process master.
+
+Overall processes seem the better choice. Implementing them requires less time and debugging will be easier, both of which are very important under the time limitations for the project.
+
+\subsection{Process Master Implementation Language}
+
+
+\section{Building Testu01}
+\subsection{Vanilla Testu01}
+The project was entirely developed and tested on Arch Linux. As such, Arch specific tools were used to automate the build and install process, the most important of which is makepkg.
+
+Testu01 can be built using the conventional ./configure make make install process. This is useful for Linux distributions for which packages with precompiled binaries do not exist. 
+
+This is not the case for Arch Linux as a script that automates the process is provided in the Arch Linux User Repository. This way Testu01 is also handled by the package manager. The process for building packages from the AUR is explained thoroughly in the Arch Wiki\cite{archwiki-aur} and only the important parts for building Testu01 will be repeated here.
+
+After acquiring the Testu01 PKGBUILD from the AUR\cite{testu01-aur}, it can be installed with the following commands
+\begin{verbatim}
+makepkg -s
+sudo pacman -U testu01-1.2.3-3-$(uname -m).pkg.tar.xz
+\end{verbatim}
+
+\subsection{Modified Testu01}
+Building the customised version of Testu01 only requires small changes in the PKGBUILD file to point to the correct github repository.
+
+
+\section{Running the test suites}
