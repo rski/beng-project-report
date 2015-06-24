@@ -1,0 +1,26 @@
+\chapter{Results and the Future}
+\label{cha:results}
+In this chapter, the results are analysed with regards to performance and correctness. Furthermore the limitations of this solution are discussed as well as possible improvements for the future.
+
+\section{Assessing Correctness}
+
+\section{Testu01 Compatibility}
+
+\section{Limitations and Future Work}
+\subsection{Generator setup time}
+Currently, the biggest limitation of this solution is the fact that a test generator is initialised every time a test is run. Since the tests run in separate processes, a new generator is set up for each one.
+For trivial generators, this cost might be insignificant, but for generators that are simulations of hardware, it can overshadow the performance gains of parallelisation. The following equations can help illustrate this point:
+
+Linear test suite completion time: N * AverageTestTime + GenSetupTime
+Parallel test suite completion time: N * (AverageTestTime + GenSetupTime) / NumbOfCores
+Solving for GenSetupTime:
+
+If this equation holds, then the performance of the parallel suite will be at worst the same as the serial one.
+The number of cores of modern desktops and laptops ranges between two and eight. Using these numbers, estimates for the maximum efficient parallel GenSetupTime can be acquired. Since systems with more cores than eight were used in the actual measurements, estimations are included for those too.
+Number of cores
+2 4 6 8
+smallCrush
+Crush
+BigCrush
+
+
