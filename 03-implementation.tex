@@ -35,8 +35,10 @@ Extracting the test results from the processes will also have to be handled by t
 
 Overall processes seem the better choice. Implementing them requires less time and debugging will be easier, both of which are very important under the time limitations for the project.
 
-\subsection{Process Master Implementation Language}
+\subsection{Processmaster Implementation Language}
+Python was chosen as the implementation language for a multitude of reasons. Probably the most important one is Python's portability. It is readily available in the platforms that Testu01 works and can handle multiprocessing in an OS agnostic way.
 
+It is also easy to use and provides very useful tools that make interpreting the process results much easier than it would be in C. It was chosen over other similar languages such as Lua and Perl due to previous experience with it.
 
 \section{Building Testu01}
 \subsection{Vanilla Testu01}
@@ -53,7 +55,7 @@ sudo pacman -U testu01-1.2.3-3-$(uname -m).pkg.tar.xz
 \end{verbatim}
 
 \subsection{Modified Testu01}
-Building the customised version of Testu01 only requires small changes in the PKGBUILD file to point to the correct github repository.
+Building the customised version of Testu01 only requires small changes in the PKGBUILD file. The source had to be changed to point to the correct github repository and the package name had to be changed as well.
 
 
 \section{Running the test suites}
