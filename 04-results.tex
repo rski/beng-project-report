@@ -23,4 +23,14 @@ smallCrush
 Crush
 BigCrush
 
+\subsection{Lack of flexibility}
 
+\subsection{Windows support}
+The original test suites could be compiled for Windows. The Testu01 homepage provides precompiled Windows binaries which can be used to run the tests.
+
+However, despite this project being theoretically still portable and working on Windows, it has not been tested for compatibility. This is due to lack of time and lack of knowledge and experience with working on Cygwin on Windows.
+
+\subsection{File Generators}
+Currently the three Crush suites allow for use of files as random number generators. This functionality has not been tested at all and was not taken under consideration when building the parallel Testu01. As a result, the best approximation that can be given for using the parallel suites with a file generator is simply undefined behaviour and should not be used at all.
+
+However, given the nature of files, it would quite probably be possible to extend the parallelism for these generators as well without major restructuring of the code base.
