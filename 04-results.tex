@@ -3,10 +3,39 @@
 In this chapter, the results are analysed with regards to performance and correctness. Furthermore the limitations of this solution are discussed as well as possible improvements for the future.
 
 \section{Assessing Correctness}
+\subsection{Ensuring that the generators are separate}
+Since the tests are run in separate processes, they do not use memory like threads. Each process has its own address space, independent of the others and so the generators are also separate. This can be easily verified by the printing the address of the generator after it is created:
+
+\begin{figure}[h]
+  \begin{verbatim}
+
+  unif01_Gen *gen;
+  gen = ulcg_CreateLCG (2147483647, 16807, 0, 12345);
+  printf("generator address: %p\n", gen);
+
+  \end{verbatim}
+  \caption{code that creates a generator and prints the memory address from test\_slave.c}
+  \label{fig:generator_address}
+\end{figure}
+
+Running the command \texttt{./test\_slave.out 1 1 \& ./test\_slave.out 1 1} starts two processes that both run the first test from the Crush suite. Their output is the following:
+
+\begin{figure}[h]
+  \begin{verbatim}
+  generator address: 0x8454008
+  generator address: 0x9af6008
+  \end{verbatim}
+  \caption{Values of pointers to two generators each created a concurrent process}
+  \label{fig:generator_address_output}
+\end{figure}
+
+\subsection{Correspondence with serial results}
+
 
 \section{Testu01 Compatibility}
 
 \section{Limitations and Future Work}
+
 \subsection{Generator setup time}
 Currently, the biggest limitation of this solution is the fact that a test generator is initialised every time a test is run. Since the tests run in separate processes, a new generator is set up for each one.
 For trivial generators, this cost might be insignificant, but for generators that are simulations of hardware, it can overshadow the performance gains of parallelisation. The following equations can help illustrate this point:
@@ -23,14 +52,35 @@ smallCrush
 Crush
 BigCrush
 
+The ideal solution would use copied generators as outlined in the Threads versus Processes section. At this point this is not possible and will require coming up with another solution that might be incompatible with the current one.
+
+\subsection{Fast tests}
+For suites comprised of small tests, running vanilla Testu01 might actually be faster.
+
+New tests are allocated every 1 second. Thus tests processes that run for less time than that waste CPU time. Depending on the number of cores and what percentage of the 1 second is wasted, the sequential suites might be faster.
+
+The minimum amount of times the allocation loop is called is equal to NumberOfTests mod NumberOfCores.
+
+For processors with a large number of cores, more new processes will be spawned after every second so this effect is not as serious. If the whole suite can be run simultaneously it will take less than a second since new tests will be allocated only once. On the other hand, the run time on processors with a small number of cores, such as two, will be impacted more.
+
+It would be an interesting extension to regulate the time between new test allocations depending on the number of cores detected. On the other hand, the tests whose runtime is smaller than one second are only part of the smallCrush suite, the total time of which is under 5 seconds on the machines tests. Thus writing code to optimise the parallelism of smaller tests might not be worth the effort.
+
 \subsection{Lack of flexibility}
+Currently a number of things are hardwired in the source code. This sped up the development process, but is not optimal from a usability point of view.
+
+Providing a configuration file and/or command line arguments to allow custom files for the test order and the test\_slave executable would make the software more user friendly. At the moment, the test suite is changed by modifying the source code.
+
+Providing a python file masked as a configuration file would solve these usability issues.
+
 
 \subsection{Windows support}
 The original test suites could be compiled for Windows. The Testu01 homepage provides precompiled Windows binaries which can be used to run the tests.
 
-However, despite this project being theoretically still portable and working on Windows, it has not been tested for compatibility. This is due to lack of time and lack of knowledge and experience with working on Cygwin on Windows.
+This project maintains compatibility with non-POSIX platforms, but the folder handling might not work as expected on Windows. Specifically, there is an explicit reference to the '/tmp' directory, which is used for storing the debug logs. This makes the code not portable to Windows.will not work on Windows.
 
-\subsection{File Generators}
+With a few minor modifications, enough time and motivation it should still be possible to port this project on Windows.
+
+\subsection{File generators}
 Currently the three Crush suites allow for use of files as random number generators. This functionality has not been tested at all and was not taken under consideration when building the parallel Testu01. As a result, the best approximation that can be given for using the parallel suites with a file generator is simply undefined behaviour and should not be used at all.
 
 However, given the nature of files, it would quite probably be possible to extend the parallelism for these generators as well without major restructuring of the code base.
