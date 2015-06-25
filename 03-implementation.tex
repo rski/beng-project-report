@@ -39,6 +39,17 @@ This was the most critical part of the design process. It had to be simplistic e
 
 Processes, although primitive in comparison to frameworks that would allow thread based decoupling of the generators, are easy to use and learn and would almost definitely provide a performance boost, at least for more primitive generators.
 
+\subsection{Printing the results}
+The original test suite prints out the results of each test right after it is finished. This is not the case with the parallel version.
+
+The choice for the results of each test to be captured immediately was made, but processed and finished only once the whole suite is finished. This means that there is no indication the results until the very end. If the test suite were to be stopped no results could be obtained from the run.
+
+This was done to maintain the same order printing order as the original suites. Printing the results in order earlier could only implemented with a thread and would require locking mechanisms to be placed.
+
+This would not guarantee that the tests are printed close to the time that each test is completed. In order to uphold the test order, the results for the latter tests would have to be printed after the first tests of the suite are completed. If the earlier tests were ones of the last to be run in the parallel version, the results would only be printed then, thus presenting no significant advantage over waiting until the whole suite is complete. The benefits do not justify writing very complex and bug prone code.
+
+More importantly, having a thread would impact performance. Waiting for the locked resources and the overhead from switching between the threads adds overhead and would definitely affect the performance.
+
 \subsection{Process master-slave model}
 A process based implementation requires a process master and a process slave. The process slaves are written in C.
 
@@ -75,10 +86,24 @@ sudo pacman -U testu01-1.2.3-3-$(uname -m).pkg.tar.xz
 \subsection{Modified Testu01}
 Building the customised version of Testu01 only requires small changes in the PKGBUILD file. The source had to be changed to point to the correct github repository and the package name had to be changed as well.
 
+The only required changes are the following:
+\begin{verbatim}
+source=("git://github.com/rski/testu01-parallel")
+#since the source is no longer an archive there is no checksum
+sha256sums=('SKIP')
+#ensure that installing it along testu01 will not happen
+conflicts=('testu01')
+\end{verbatim}
+
+The full PKGBUILD file is part of the source on the github repository\cite{github-repo} and can be found under the \texttt{/build} folder.
 
 \section{Running the test suites}
+After installing Testu01, the first step was to run the test suites using one of the built in generators.
 
 \section{Modifying Testu01}
+\subsection{Testu01 structure}
+
+\subsection{Modifications for parallelism}
 
 \section{Test Order Generation}
 
