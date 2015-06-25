@@ -35,10 +35,28 @@ Extracting the test results from the processes will also have to be handled by t
 
 Overall processes seem the better choice. Implementing them requires less time and debugging will be easier, both of which are very important under the time limitations for the project.
 
+This was the most critical part of the design process. It had to be simplistic enough to be doable within the time limits and provide a working solution. If it were discovered near the final stages that this approach would not yield results, there would not be enough time for a second attempt. There was only time for one solution and the path to it had to guarantee results. The more sophisticated solutions by Suciu et al\cite{parallelism-paper2} would have been interesting to explore, but possibly would have not provided results. That was not a risk that could be taken.
+
+Processes, although primitive in comparison to frameworks that would allow thread based decoupling of the generators, are easy to use and learn and would almost definitely provide a performance boost, at least for more primitive generators.
+
+\subsection{Process master-slave model}
+A process based implementation requires a process master and a process slave. The process slaves are written in C.
+
+Talk a bit about how the test number is passed to the process
+
 \subsection{Processmaster Implementation Language}
 Python was chosen as the implementation language for a multitude of reasons. Probably the most important one is Python's portability. It is readily available in the platforms that Testu01 works and can handle multiprocessing in an OS agnostic way.
 
 It is also easy to use and provides very useful tools that make interpreting the process results much easier than it would be in C. It was chosen over other similar languages such as Lua and Perl due to previous experience with it.
+
+\subsection{Test Order}
+In order to minimise the total time of the suite, the best order is to start the slowest tests first. Obviously the actual run time of the tests cannot be known a priori, but an estimation can be acquired.
+
+Testu01 prints the total CPU time taken for each test. Using a simple generator a list of tests from slowest to fastest can be acquired. This will not be a representation of the actual times the tests will take since it will vary from generator to generator, but it will be good enough to sort the tests by run time.
+
+This order will hold strictly if the generators add equal overhead to each test, which from reading the source of Testu01, seems to be the case. Even if the order is not strictly correct, it still is a good estimate.
+
+Running the tests by order restricts the flexibility of the solution. If new tests are added, simply changing the number of tests in the definitions will not be enough, the will have to be added to the order file as well. This is not a problem as tools to automatically generate the order from a file that holds the output of the test suites are provided.
 
 \section{Building Testu01}
 \subsection{Vanilla Testu01}
@@ -59,3 +77,11 @@ Building the customised version of Testu01 only requires small changes in the PK
 
 
 \section{Running the test suites}
+
+\section{Modifying Testu01}
+
+\section{Test Order Generation}
+
+\section{Handling the Processes}
+
+\section{Result Processing}
