@@ -1,0 +1,29 @@
+\chapter{Research}
+\label{cha:res}
+This chapter provides a high level introduction to the concepts required to understand the functionality of Testu01. It also provides a guide to the control flow of the parts of the suite that have been parallelised. 
+Furthermore, it examines previous attempts at creating parallel versions of Testu01. It explains the shortcomings of these attempts and the novelty in this implementation of a parallel Testu01.
+
+\section{Current state of Testu01}
+\section{Previous Solutions}
+\subsection{Parallel Implementation of the Testu01 Statistical Test Suite}
+This is one of the oldest parallel Testu01 implementations. Suciu et al. parallelised two of the test suites using OpenMP and demonstrated a relatively high increase in performance for them. Although the profiling results are promising, this solution is quite limited. The reasons for that are explained bellow.
+
+The suites that were parallelised are \textit{Alphabit} and \textit{Rabbit}. According to the Testu01 Long Guide\cite{longguide-alphabit}, these are batteries written to test hardware generators and can be run both on files and software based generators.
+
+Suciu et al. achieved parallelism by using threads on top of the OpenMP parallel programming API\cite{openmp}. This allowed for fine grained control over which parts of the processing where shared between threads. Sharing the generators between threads, which is the biggest hurdle in parallelising Testu01, was overcome by copying the generators at the start of every thread. 
+
+Using this approach, the first implementation of the Rabbit and Alphabit batteries was designed and implemented, ParTestU01. Although it did provide performance gains, the first test of Rabbit was significantly slower than the rest, as it accounted for roughly half of the execution time of the battery. This prevented ParTestU01 from scaling properly, as it was always limited to the execution time of the first test.
+
+Thus, ParTestU01E was implemented. This takes advantage of the OpenMP capabilities in order to split the first test of Rabbit into more than one processes. This provided even more performance gains.
+
+Ultimately, the speed up increase peaked between 5 and 9 threads. Increasing the thread number beyond nine was actually detrimental to the battery performance. Running parallel Rabbit on a 32MB and a 64MB file achieved an up to six times performance increase.
+
+It would seem that these improvements brought to the test suite are quite significant. Unfortunately, they are not, especially compared to other suites. According to the Testu01 Guide, the file based Alphabit suite running on a 1.7Ghz processor takes 2.3 minutes to test a 2\textsuperscript{30} bit file. Similarly, Rabbit requires 28 minutes to test a file of the same size. Compared to running BigCrush with a simple generator, whose runtime is above three and a half hours on a much more modern processor, these times pale in comparison.
+
+Furthermore, neither source code or binaries for this implementation seem to be available online. The paper provides an overview of the process of parallelising Testu01, but the project apparently is unpublished for wide distribution or extremely had to discover.
+
+Finally the authors mention that they had started working on a new and improved parallel implementation at the time that this paper was published.
+
+\subsection{Parallel Object-Oriented Implementation of the Testu01 Statistical Test Suites}
+This is the paper that follows the previous one by Suciu et al. The same research group parallelised Testu01 using a completely different approach and compared the results with the ones of the OpenMP solution.
+
