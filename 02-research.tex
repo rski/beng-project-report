@@ -25,5 +25,16 @@ Furthermore, neither source code or binaries for this implementation seem to be 
 Finally the authors mention that they had started working on a new and improved parallel implementation at the time that this paper was published.
 
 \subsection{Parallel Object-Oriented Implementation of the Testu01 Statistical Test Suites}
-This is the paper that follows the previous one by Suciu et al. The same research group parallelised Testu01 using a completely different approach and compared the results with the ones of the OpenMP solution.
+This is the paper that follows the previous one by Suciu et al. The same research group parallelised a different part of Testu01 using an Object Oriented approach. This is a very promising implementation with impressive performance gains compared to the original Testu01.
 
+Once again, only part of Testu01 was parallelised. This was the Multinomial distribution test, as according to the authors this "is by far the most time consuming statistical test from Testu01". This solution is quite complex and was decided due to limitations of C, which could be overcome by features of OOP.
+
+Generators for this solution were implemented using interfaces. In contrast with the original generator definitions, this allows for concurrent generators.The fact that generator data is now encapsulated along with functions for copying and initialising generators, allowed for concurrent generators.
+
+Since C does not support object oriented programming, this solution was implemented in C\#. Similarly, OpenMP that was previously used had to be replaced with the Task Parallel Library (TPL).
+
+Using these as a basis, the Multinomial Distribution Test was parallelised and performance metrics were gathered. The speedup is quite close but consistently higher than the one of the OpenMP implementation of this test.
+
+The greatest advantage of this implementation is that it can be used to parallelise the rest of the tests of Testu01. Unfortunately, no paper on the progress of porting Testu01 to this TPL solution could be found.
+
+\subsection{The case for yet another solution}
