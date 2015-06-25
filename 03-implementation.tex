@@ -39,7 +39,7 @@ This was the most critical part of the design process. It had to be simplistic e
 
 Processes, although primitive in comparison to frameworks that would allow thread based decoupling of the generators, are easy to use and learn and would almost definitely provide a performance boost, at least for more primitive generators.
 
-\subsection{Printing the results}
+\subsection{Aggregating the results}
 The original test suite prints out the results of each test right after it is finished. This is not the case with the parallel version.
 
 The choice for the results of each test to be captured immediately was made, but processed and finished only once the whole suite is finished. This means that there is no indication the results until the very end. If the test suite were to be stopped no results could be obtained from the run.
