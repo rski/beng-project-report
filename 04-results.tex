@@ -33,6 +33,8 @@ Running the command \texttt{./test\_slave.out 1 1 \& ./test\_slave.out 1 1} star
 
 
 \section{Testu01 Compatibility}
+The code changes in this project are backwards compatible with Testu01. It was only required to add one function to the Testu01 source. No other modifications were needed and so the serial batteries can still be run in the exact same way as before.
+
 
 \section{Limitations and Future Work}
 
@@ -87,3 +89,10 @@ However, given the nature of files, it would quite probably be possible to exten
 
 \subsection{Repeating tests}
 There are three wrapper functions of the form \texttt{bbattery\_RepeatCrush()}. These have not been re-implemented as it would be impossible. Restarting the suite with the process master provides a similar functionality.
+
+\subsection{Conclusion}
+This is not quite a perfect parallel implementation of Testu01. It is partial, but of a part that has not been parallelised before.
+
+Despite its limitations, it introduces significant performance gains to the BigCrush battery and it produces the same results as the original Testu01.
+
+In the future more sophisticated parallelisations of the Crush batteries with higher performance increases might be introduced. Until then this is a more than adequate replacement whose performance well justifies preference over the serial batteries.
