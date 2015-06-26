@@ -84,3 +84,6 @@ With a few minor modifications, enough time and motivation it should still be po
 Currently the three Crush suites allow for use of files as random number generators. This functionality has not been tested at all and was not taken under consideration when building the parallel Testu01. As a result, the best approximation that can be given for using the parallel suites with a file generator is simply undefined behaviour and should not be used at all.
 
 However, given the nature of files, it would quite probably be possible to extend the parallelism for these generators as well without major restructuring of the code base.
+
+\subsection{Repeating tests}
+There are three wrapper functions of the form \texttt{bbattery\_RepeatCrush()}. These have not been re-implemented as it would be impossible. Restarting the suite with the process master provides a similar functionality.
