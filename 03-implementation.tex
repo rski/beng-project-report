@@ -69,6 +69,8 @@ This order will hold strictly if the generators add equal overhead to each test,
 
 Running the tests by order restricts the flexibility of the solution. If new tests are added, simply changing the number of tests in the definitions will not be enough, the will have to be added to the order file as well. This is not a problem as tools to automatically generate the order from a file that holds the output of the test suites are provided.
 
+Unfortunately, there was not enough time to implement tools for this. It was obvious that for smallCrush, the tests ordered by increasing time are the same as the tests number one to ten, so the tests are spawned in a descending order from ten. For the other two suites a linear order from one to the last test was used.
+
 \section{Building Testu01}
 \subsection{Vanilla Testu01}
 The project was entirely developed and tested on Arch Linux. As such, Arch specific tools were used to automate the build and install process, the most important of which is makepkg.
