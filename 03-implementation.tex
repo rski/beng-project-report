@@ -105,9 +105,79 @@ The file \texttt{examples/bat1.c} packaged with Testu01 was compiled with \textt
 This file was used as the basis for creating the test\_slave.out executable later.
 
 \section{Modifying Testu01 for Parallelism}
+The batteries in bbattery.c were already designed so that only one of the test functions could be called. Making the batteries run a single test function was merely a matter of writing a wrapper function that allows choosing one the three batteries and the test function to be run.
+
+\begin{verbatim}
+void startSingleTest(unif01_Gen * gen, int testNumber, int testSuite){
+  //initiate the Rep array to 0
+  int Rep[1+NDIM] = {0};
+  //tests are run by looking at the Rep array
+  //the ones that have a 0 value in their cell will not be run
+  //here only the test testNumber is run
+  Rep[testNumber] = 1;
+  switch(testSuite){
+    case 0:
+      SmallCrush(gen, NULL, Rep);
+      break;
+    case 1:
+      Crush(gen, Rep);
+      break;
+    case 2:
+      BigCrush(gen, Rep);
+      break;
+    //only used for debugging purposes
+    default:
+      printf("Will run test %d from suite %d\n", testNumber, testSuite);
+      break;
+  }
+} 
+\end{verbatim}
+
+Of course, the function declaration had to be added to the bbattery.tex file so that it would be placed in the generated header.
+
+With this simple modification, selecting a single test from a specific suite is possible.
+
+\section{Slave Process}
+The previous function needs an executable to call it. This was created by using the bat1.c example file and adapting it appropriately.
+
+
+\begin{verbatim}
+int main(int argc, char **argv){
+  //find out which test from which suite to run
+  int testNumber, testSuite;
+  //ensure that the program was called correctly
+  checkArguments(argc, argv);
+  testNumber = atoi(argv[1]);
+  testSuite = atoi(argv[2]);
+  //start up a generator and get a test running on it 
+  translator's note keikaku means planunif01_Gen *gen;
+  gen = ulcg_CreateLCG (2147483647, 16807, 0, 12345);
+  //start the test & suite that was passed 
+  startSingleTest(gen, testNumber, testSuite);
+  ulcg_DeleteGen (gen);
+  return 0;
+}     
+\end{verbatim}
+
+This code is not particularly complex or innovative, but it is worth pointing it out to make clear how it is called and what it executes. It also serves as a guideline on how to write slave process executables that will be used to run the parallel suites.
+
+A makefile is provided to compile the executable \texttt{test\_slave.out} from the source file \texttt{test\_slave.c}.
 
 \section{Test Order Generation}
 
 \section{Handling the Processes}
+This was the most difficult and trickiest part of the project. It required forking processes with tests that had not run yet, capturing their results and ensuring that they finish properly before the results were collected. Corner cases that were not obvious in the beginning contributed to making this problem perilous. 
 
+Initially, process forking was dealt with by the subprocess.call() function. It was usable, but had limitations and dangers that made a change to the Popen constructor imperative. The limitation was that even though the output of the subprocess could be captured, it could only be sent to a file handle. Writing to files would slow down the program and are not as an elegant solution as lists. This was not the reason for moving to Popen, as it could've been worked around. Using \texttt{stdout=PIPE} with this module could lead to a deadlock. It is impossible be sure that a deadlock would not happen, it could merely be said that one had not happened yet. For this reason, moving to Popen was important. Although this was discovered after the forking code had been implemented, the calls to the forking function had been placed in a wrapper function and the switch was relatively painless.
+
+The hidden pitfall behind forking was a bug that would only appear in systems with a large number of cores. The list that holds the processes was allocated to be equal to the number of cores. This way the maximum number of tests could run in parallel. However, if the size of the suite was smaller than the number of cores, some of the cells of the process list would still be \texttt{None}. Thus, any subsequent attempts to call Popen member functions on them would cause the program to crash, since there were no safeguards around it. Creating a list whose size is the minimum of the number of cores and the test suite size fixed this issue:
+
+\begin{verbatim}
+def createProcessArray():
+    if SUITE_SIZE[testSuite] <= numberOfCores:
+        processes = [None] * SUITE_SIZE[testSuite]
+    else:
+        processes =  [None] * numberOfCores
+    return processes
+\end{verbatim}
 \section{Result Processing}
