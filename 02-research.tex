@@ -20,6 +20,49 @@ Despite its usability and extensive collection of tests, Testu01 suffers from pe
 \label{fig:cpu_serial_tests}
 \end{figure}
 
+It is obvious that there is a large amount of computing capacity that is currently unused by Testu01. This is a serious problem that has been raised in the passed as an issue\cite{statistical-testing}. There have been attempts to address this, but they are either incomplete or have other issues which are discussed in more detail bellow.
+
+\subsection{Control flow of Testu01}
+The aim of the project is to parallelise the smallCrush, Crush and BigCrush batteries and so this section will provide a high level description of the typical control flow when one of these suites is used. The following are the essential components required for setting up and running one of these three batteries:
+\begin{itemize}
+  \item Executable: This file initialises the generator and calls the test suite. Written in C.
+  \item bbattery\_\$SuiteName(): This is the function that calls the tests and collects their results. \$SuiteName can be SmallCrush, Crush or BigCrush.
+  \item Generator: The tests use it to get the random numbers. Can be a file or a software based generator.
+  \item Test functions: These are the functions that implement the statistical testing. The bbattery\_\$SuiteName() family of functions calls them.
+  \item Result aggregators: The functions that are called at the end of the batteries. They collect the tests with suspect p values and print a list of the ones that the generator failed.
+\end{itemize}
+
+The following diagram shows the relationships between these components:
+
+\subsection{Generators}
+Testu01 provides an interface for linking and using external generators written in C.
+There are three functions that have to be used to link an external generator with Testu01:
+\begin{verbatim}
+unif01_Gen *unif01_CreateExternGen01 (char *name, double (*gen01)(void));
+unif01_Gen *unif01_CreateExternGenBits (char *name, unsigned int (*genB)(void));
+unif01_Gen *unif01_CreateExternGenBitsL (char *name, unsigned long (*genB)(void));
+\end{verbatim}
+
+The Testu01 Guide provides a very detailed explanation on their use, along with examples. It is generally not good practice to duplicate documentation, and since external generators are not used in this project, please refer to the Testu01 on how to use them.
+
+The generator that was used in this project is one of the uniform linear congruential generators (ULGCs) that was provided with Testu01.
+From the Testu01 documentation\cite{testu01guide-p25}:
+\begin{verbatim}
+unif01_Gen * ulcg_CreateLCG (long m, long a, long c, long s);
+\end{verbatim}
+
+``Initializes a LCG of the form (2.1).
+The initial state is x\textsubscript{0}= s and the output at step i is x\textsubscript{i}/m.
+The actual implementation depends on the values of (m, a, c). Restrictions: a, c and s must be
+non-negative and less than m.''
+
+It is essentially a state machine. The state s determines the next "random" number and the initial state fully determines the sequence of numbers. When using a generator, states absolutely cannot be skipped. The generator has to move sequentially between them, otherwise the sequence is not valid.
+
+Therein lies the problem with parallelising Testu01. Only one test can use the generator at a time or it will produce invalid sequences. For a parallel battery, each test needs to have a separate generator, with its own state, that is completely independent of the other tests' generators. By design, Testu01 uses only one generator per battery. This is the problem that every attempt to parallelise Testu01 has to solve.
+
+\subsection{Batteries}
+There are three test batteries in Testu01: \texttt{bbattery\_SmallCrush()}, \texttt{bbattery\_Crush(}) and \texttt{bbattery\_BigCrush()}.
+
 \section{Previous Solutions}
 \subsection{Parallel Implementation of the Testu01 Statistical Test Suite}
 This is one of the oldest parallel Testu01 implementations. Suciu et al. parallelised two of the test suites using OpenMP and demonstrated a relatively high increase in performance for them. Although the profiling results are promising, this solution is quite limited. The reasons for that are explained bellow.
