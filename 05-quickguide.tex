@@ -1,0 +1,30 @@
+\chapter{Quick Start Guide}
+\section{Installation}
+This is a guide on how to install and run the parallel Testu01 suite.
+
+First clone the git repository from github\cite{github-repo}.
+\begin{verbatim}
+  git clone $URL
+\end{verbatim}
+
+For Arch Linux users the following step can be skipped. There is a PKGBUILD inside the build directory that can be used it install Testu01.
+Refer to the Arch Wiki instructions on installing from the AUR.
+
+Install the modified Testu01 (refer to your distributions manual and the Testu01 documentation for proper configuration):
+\begin{verbatim}
+  ./configure
+  make
+  sudo make install 
+\end{verbatim}
+
+\section{Running the tests suites}
+Enter the \texttt{parallel} folder. Run make to compile the test slave executable.
+
+
+Use the following command to run the parallel test suite:
+\begin{verbatim}
+  python proocess_master.py
+\end{verbatim}
+
+\section{Selecting the battery}
+The battery can be selected by editing the \texttt{testSuite} variable in the file \texttt{process\_master}.
