@@ -30,7 +30,62 @@ Running the command \texttt{./test\_slave.out 1 1 \& ./test\_slave.out 1 1} star
 \end{figure}
 
 \subsection{Correspondence with serial results}
+The result printing of parallel Testu01 is as close to the original suite as possible.
 
+The output of each test is exactly the same. It is captured from the process's stdout and the header and the aggregate results are stripped from it. Then the results for each test are printed in the same order as in the serial batteries.
+
+The aggregate results differ, but not greatly. There is a small difference in the whitespace and alignment of the failed test and eps columns, which might is not obvious to the eye, but could affect automatic parsers, if any such tools have been written for Testu01. It should be possible to account for those changes with only minor modifications. There are three fields which are missing from the Summary results; \texttt{Version}, \texttt{Generator} and \texttt{Number of statistics}. Finally, the total CPU time is calculated differently in the parallel version. There are small problems that can be fixed in a future release.
+
+The list of failed tests between the two versions is comparable by inspection. For example, the Summary results for the smallCrush run serially and in parallel:
+
+\begin{figure}[h]
+\begin{verbatim}
+========= Summary results of SmallCrush =========
+
+ Version:          TestU01 1.2.3
+ Generator:        ulcg_CreateLCG
+ Number of statistics:  15
+ Total CPU time:   00:00:07.20
+ The following tests gave p-values outside [0.001, 0.9990]:
+ (eps  means a value < 1.0e-300):
+ (eps1 means a value < 1.0e-15):
+
+       Test                          p-value
+ ----------------------------------------------
+  1  BirthdaySpacings                 eps
+  2  Collision                        eps
+  6  MaxOft                           eps
+ ----------------------------------------------
+ All other tests were passed
+\end{verbatim}
+\caption{serial Testu01 output for the ulcg\_CreateLCG generator}
+  \label{fig:serial-small-output}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{verbatim}
+========= Summary results of smallCrush =========
+Total time: 4.030619s
+The following tests gave p-values outside [0.001, 0.9990]:
+(eps  means a value < 1.0e-300):
+(eps1 means a value < 1.0e-15):
+        Test                          p-value
+ ----------------------------------------------
+  1  BirthdaySpacings                 eps
+  2  Collision                        eps
+  6  MaxOft                           eps
+ ----------------------------------------------
+  \end{verbatim}
+  \caption{parallel Testu01 output for the ulcg\_CreateLCG generator}
+  \label{fig:parallel-small-output}
+\end{figure}
+\clearpage{}
+
+By inspection, it is obvious that the same tests fail in both occasions. This can be seen in the Crush and BigCrush. Due to their length, they are available on the github repository\cite{github-repo}.
+
+Although it can be verified by inspection that the same tests fail in both implementations, a tool that automates this process would be ideal. For this generator, more than 60 tests fail when running BigCrush. Automatically checking that they are tests that should fail would be faster.
+
+Combining the fact that the failing tests are the same with having demonstrated that the generators are separate and produce valid sequences, it can be said with a large degree of confidence that the parallel Crushes are as correct as the serial ones.
 
 \section{Testu01 Compatibility}
 The code changes in this project are backwards compatible with Testu01. It was only required to add one function to the Testu01 source. No other modifications were needed and so the serial batteries can still be run in the exact same way as before.
