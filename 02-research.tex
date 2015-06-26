@@ -61,7 +61,11 @@ It is essentially a state machine. The state s determines the next "random" numb
 Therein lies the problem with parallelising Testu01. Only one test can use the generator at a time or it will produce invalid sequences. For a parallel battery, each test needs to have a separate generator, with its own state, that is completely independent of the other tests' generators. By design, Testu01 uses only one generator per battery. This is the problem that every attempt to parallelise Testu01 has to solve.
 
 \subsection{Batteries}
-There are three test batteries in Testu01: \texttt{bbattery\_SmallCrush()}, \texttt{bbattery\_Crush(}) and \texttt{bbattery\_BigCrush()}.
+There are three test batteries in Testu01: \texttt{bbattery\_SmallCrush()}, \texttt{bbattery\_Crush()} and \texttt{bbattery\_BigCrush()}, as well as their file equivalents \texttt{bbattery\_\$\{SuiteName\}File()}
+
+Each one of these batteries is a wrapper around the functions \texttt{SmallCrush()}, \texttt{Crush()} and \texttt{BigCrush()} respectively. These then calls the test functions in sequence, collect their results and finally call the functions that aggregate the p values and create the result output.
+
+Calling the test functions is what is needed to be parallelised.
 
 \section{Previous Solutions}
 \subsection{Parallel Implementation of the Testu01 Statistical Test Suite}
