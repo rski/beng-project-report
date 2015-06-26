@@ -180,12 +180,11 @@ def createProcessArray():
         processes =  [None] * numberOfCores
     return processes
 \end{verbatim}
-\section{Result Processing}
 
 Something worth mentioning is the generator that was used to get the next test to be run. These generators are not Random Number Generators, but Python objects that behave similarly to functions. Instead of returning a value like a function, generators yield one. Function state is destroyed once outside of the function scope, but generators resume where the last yield stopped. In a way they are similar to C style functions with static variables. A generator is used to get the next test that is to be executed. Once there are no more tests, it returns \texttt{None}.
 
 \begin{figure}[h]
-\begin{verbatim}
+\begin{lstlisting}[language=Python]
 def testGenerator(testSuite):
     #get the testOrder from the correspoinding file for the suite
     testOrder = testOrderFromFile(testSuite)
@@ -196,7 +195,100 @@ def testGenerator(testSuite):
     #if there are no more tests, the generator returns None
     while True:
         yield None
-\end{verbatim}
+\end{lstlisting}
         \caption{The generator that yields the next test. From order.py}
-        \label{fig:generator_address}
+        \label{fig:testOrderGenerator}
 \end{figure}
+
+The suite to be executed is held by a variable inside the main function of the file \texttt{process\_master.py}
+
+This program follows a spawn-poll approach. The maximum number of processes are spawned. Then, every one second, every process in the process list is polled to determined if any have finished executing; if the have, their result is placed in the result array and new processes are spawned in their place:
+
+\begin{figure}[h]
+\begin{lstlisting}[language=Python]
+#testGen is a python generator as explained above
+def forkNewTests(processes, testGen, results):
+  numOfProcesses = len(processes)
+  nextTest = next(testGen)
+  testNumber = int(nextTest[1])
+  while(True):
+    #if no tests left to run exit
+    if not nextTest:
+      break
+    for i in range(0, numOfProcesses):
+      #the or allows for allocating the new processes the first time this code is executed
+      if (processes[i] is None or processes[i][0].poll() is not None) and nextTest:
+        testNumber = int(nextTest[1])
+        #get the results of the test to be replaced
+        if processes[i] is not None:
+          results[processes[i][1]-1],_ = processes[i][0].communicate()
+        processes[i] = (forkTest(nextTest), testNumber)
+        nextTest = next(testGen)
+    sleep(1)
+  return results, processes
+\end{lstlisting}
+\caption{The function that spawns the new processes from the file process\_master.py}
+\label{fig:forkNewTests}
+\end{figure}
+
+This is more efficient that a fork-join implementation. Using joins would mean that each set of processes currently running would have to wait until the slowest of all the tests finishes. The time wasted is the difference in execution time between the slowest and fastest test. By polling every second, the maximum amount of time potentially wasted is one second. For BigCrush this is a difference that could impact execution time.
+
+Once the forking function returns, a function that ensures that the last processes finish is called. After that the result aggregation function that is explained in the next section is called.
+
+Having implemented these, the parallel Testu01 can now be run with the command:
+
+\begin{verbatim}
+python process_master.py
+\end{verbatim}
+
+The full source code for the python modules can be found in the github repository\cite{github-repo} under the folder \texttt{parallel}.
+
+\section{Result Processing}
+
+This part of the test suite is handled exclusively by the \texttt{results.py} module. It works quite well and achieves its purpose, but it build on code that would break if large changes are made in the Testu01 output.
+
+The handleResults() function uses the list of all the individual test process results, the testSuite name and the total time to print an aggregate result output as close to the original Testu01 as possible.
+
+One unexpected side effect of grabbing the output of the processes from stdout using pipes is that the results array does not hold strings, but a binary encoded version of the output. Once that was discovered it was a relatively easy fix and the rest of the result manipulation is done on strings.
+
+To extract the data from the result list, the result of each one test is treated by splitting it into three entities:
+\begin{itemize}
+  \item Header: This is common for the whole suite, but each test process prints it. It is stripped from the result and generated again in the final output function.
+  \item Test results: This is the information that needs to be extracted and printed for each test. 
+  \item Summary: This is the last part of the result. Running the battery creates a summary, so again each process generates its own. It is stripped from the result, but data is also extracted from it.
+\end{itemize}
+
+The header is printed by \texttt{printSummary()}. It is just a function that imitates the original Testu01 summary function and has nothing clever in it.
+
+It is more interesting to examine how the complete list of the failed tests is generated.
+
+The function \texttt{stripHeaders()} converts the results from a single string that contains newline characters into a list. Each element of the list corresponds to a line and now the results can be parsed with regular expressions. This function also removes the first 12 lines as those are the lines that correspond to the header. The header is a fixed length so removing the first 12 lines rather than searching for the end of the header is adequate.
+
+Extracting the tests that failed from the summary is particularly easy. It happens that the only lines that start optionally with whitespace followed by a number are the ones listing the failed tests.
+
+\begin{figure}[h]
+\begin{lstlisting}[language=Python]
+def getFailedTests(summary):
+  # a simple regex that looks for optional whitespace followed by a number
+  ##then matches everything after the number
+  testFailureRe = re.compile('\s*\d+..+')
+  #each test process could have multiple tests failing 
+  #this was not accounted for initially and the output of the parallel Testu01
+  #did not match the serial one
+  failedTests = []
+  for line in summary:
+    match = testFailureRe.match(line)
+    if match is not None:
+      failedTests.append(match.group())
+  if failedTests:
+    return failedTests
+  else:
+    return None       
+\end{lstlisting}
+\caption{The function that gathers the failed tests from the module results.py}
+\label{fig:getFailedTests}
+\end{figure}
+
+In contrast to the header, the start of each test's summary varies. The function \texttt{stripSummaries()} calls \texttt{getStartOfSummary()} to determine from what element onwards the result should be stripped. \texttt{getStartOfSummary} uses regexes to find the line ``Generator state:'', as that always denotes the start of the summary.
+
+Finally, using the information gathered from the results list, an output very similar to the one of the original Crush suites is printed.
