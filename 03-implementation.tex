@@ -100,10 +100,11 @@ The full PKGBUILD file is part of the source on the github repository\cite{githu
 \section{Running the test suites}
 After installing Testu01, the first step was to run the test suites using one of the built in generators.
 
-\section{Modifying Testu01}
-\subsection{Testu01 structure}
+The file \texttt{examples/bat1.c} packaged with Testu01 was compiled with \texttt{gcc bat.c -l testu01 -o bat1.out} and ran. All three suites were ran and timed using this executable. Part of their results can be found in the appendix and files with the full output on the repository\cite{githubrepo}.
 
-\subsection{Modifications for parallelism}
+This file was used as the basis for creating the test\_slave.out executable later.
+
+\section{Modifying Testu01 for Parallelism}
 
 \section{Test Order Generation}
 
