@@ -181,3 +181,22 @@ def createProcessArray():
     return processes
 \end{verbatim}
 \section{Result Processing}
+
+Something worth mentioning is the generator that was used to get the next test to be run. These generators are not Random Number Generators, but Python objects that behave similarly to functions. Instead of returning a value like a function, generators yield one. Function state is destroyed once outside of the function scope, but generators resume where the last yield stopped. In a way they are similar to C style functions with static variables. A generator is used to get the next test that is to be executed. Once there are no more tests, it returns \texttt{None}.
+
+\begin{figure}[h]
+\begin{verbatim}
+def testGenerator(testSuite):
+    #get the testOrder from the correspoinding file for the suite
+    testOrder = testOrderFromFile(testSuite)
+    for testNumber in testOrder:
+        #list of the form ["command to be executed", testNumber, testSuiteNameString]
+        test = ["./" + TEST_SLAVE_EXECUTABLE, testNumber, TEST_SUITES[testSuite]]
+        yield test
+    #if there are no more tests, the generator returns None
+    while True:
+        yield None
+\end{verbatim}
+        \caption{The generator that yields the next test. From order.py}
+        \label{fig:generator_address}
+\end{figure}
