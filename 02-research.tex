@@ -4,6 +4,22 @@ This chapter provides a high level introduction to the concepts required to unde
 Furthermore, it examines previous attempts at creating parallel versions of Testu01. It explains the shortcomings of these attempts and the novelty in this implementation of a parallel Testu01.
 
 \section{Current state of Testu01}
+Testu01 is a C library that provides collections of tests, called test suites or batteries, for testing Random Number Generators. It provides a very extensive collection of tests that can be used to ensure that Random Number Generators adhere to adequate standards of quality. The tests allow "statistical testing of uniform random number generators"\cite{testu01-homepage}.
+
+Apart from the tests, Testu01 is distributed with example programs that use batteries to test generators, as well as reference generators that are followed by warnings against using them in critical applications. Combined with a very thorough documentation, it is a very user friendly library and can be set up and used quickly by beginners.
+
+The documentation is a particularly strong asset of Testu01. The Short and Full Guide pdf files are generated automatically from .tex sources during the build process. These same .tex sources are also used to generate the header files for the C code. As a result, the documentation is tightly integrated with the source code. It can be used both as conventional documentation that provides guidance in using Testu01 and as a guide to understanding the control flow of the source code and extending its functionality.
+
+Testu01 also specifies very clear interfaces for generators. Files and generators implemented in software can be used as long as they adhere to the Testu01 specifications.
+
+Despite its usability and extensive collection of tests, Testu01 suffers from performance issues. It was not designed to take advantage of multi-core processors. A singular instance of a generator can exist at each time and it cannot be shared between tests that run concurrently. The consequence of this is that if a battery is run on an idle multi-core system, one of the cores will be constantly at maximal capacity while the rest remain idle or are used exclusively for other processes.
+
+\begin{figure}[h]
+\includegraphics[scale=0.5]{top_full_suite}
+\caption{Top displaying CPU usage while a test suite from Vanilla Testu01 is running\cite{full-suite}}
+\label{fig:cpu_serial_tests}
+\end{figure}
+
 \section{Previous Solutions}
 \subsection{Parallel Implementation of the Testu01 Statistical Test Suite}
 This is one of the oldest parallel Testu01 implementations. Suciu et al. parallelised two of the test suites using OpenMP and demonstrated a relatively high increase in performance for them. Although the profiling results are promising, this solution is quite limited. The reasons for that are explained bellow.
@@ -37,4 +53,12 @@ Using these as a basis, the Multinomial Distribution Test was parallelised and p
 
 The greatest advantage of this implementation is that it can be used to parallelise the rest of the tests of Testu01. Unfortunately, no paper on the progress of porting Testu01 to this TPL solution could be found.
 
-\subsection{The case for yet another solution}
+\section{The Case for yet Another Solution}
+\subsection{Problems with the current solutions}
+Perhaps the biggest limitation of the previous solutions is their non-completeness. Testu01 is a very extensive library and provides a great number of batteries, tests and generators. These solutions improve a small fraction of them. There are still test suites that have runtimes of hours and could benefit greatly from multi-core scaling.
+
+There is also still demand for a parallelised Testu01 that requires small changes in projects that already using Testu01. An implementation that uses the current  Testu01 specifications will have lower use barriers for projects that have conformed to them.
+
+Furthermore, converting the entirety of Testu01 using these solutions is a time consuming and difficult challenge. The OpenMP solution turned out to not be usable outside of the Alphabit and Rabbit batteries, so it is not possible to use it as a guide for parallelising the rest of Testu01. Similarly, moving to TPL and C\# requires a considerable amount of effort. This project provides a solution that could be used to quickly parallelise any test suite and generator.
+
+BigCrush is a test suite whose total run time exceeds three hours on a system with an Intel i5-3570k processor, with four cores clocked at 3.4Ghz. This suite calls 106 test functions, each one of which might run more than one test. Converting all these tests to a TPL based parallel suite and ensuring they still produce correct results is a task that might not be completed in the foreseeable future. This project will provide a parallel BigCrush that can be used with very minimal changes in existing programs that use Testu01 to test generators. The Crush and to a lesser extend smallCrush battery also benefit from it.
